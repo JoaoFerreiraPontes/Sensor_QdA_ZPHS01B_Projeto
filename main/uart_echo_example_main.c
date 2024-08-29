@@ -61,7 +61,7 @@ static void echo_task(void *arg)
     ESP_ERROR_CHECK(uart_param_config(UART_PORT_NUM, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(UART_PORT_NUM, UART_TXD_PIN, UART_RXD_PIN, UART_RTS, UART_CTS));
 
-    // Configure a temporary buffer for the incoming data
+    // Configure a buffer for the incoming data
     uint8_t *data = (uint8_t *) malloc(BUF_SIZE);
     int len = 0;
     reset_response_buffer_and_counter(data, &len);
@@ -77,13 +77,11 @@ static void echo_task(void *arg)
         if (check_response(data, len)) {
             reset_response_buffer_and_counter(data, &len);
             ESP_LOGI(TAG, "error in response data checksum");
-            ESP_LOGI(TAG, "response data %s ; response length %d", data, len);
             continue;
         } else {
             ESP_LOGI(TAG, "response check is passed");
         }
 
-        data[len] = '\0';
         print_response(data, len);
         reset_response_buffer_and_counter(data, &len);
 
