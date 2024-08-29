@@ -105,7 +105,7 @@ void print_response(uint8_t *response, int response_len) {
 
     int temp1 = response[11]*256;
     int temp2 = response[12];
-    double temp = ((temp1 + temp2) - 500) * 0.1;   //-20.0 .. 65.0 Celsius in 0.1
+    double temp = ((temp1 + temp2) - 435) * 0.1;   //-20.0 .. 65.0 Celsius in 0.1
 
     uint16_t humidity = response[13]*256 + response[14]; //0..100 %RH
 
