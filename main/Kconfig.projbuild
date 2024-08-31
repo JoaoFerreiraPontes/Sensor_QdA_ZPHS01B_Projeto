@@ -15,7 +15,7 @@ menu "Echo Example Configuration"
     config EXAMPLE_UART_BAUD_RATE
         int "UART communication speed"
         range 1200 115200
-        default 115200
+        default 9600
         help
             UART communication speed for Modbus example.
 
@@ -36,7 +36,7 @@ menu "Echo Example Configuration"
             about available pin numbers for UART.
 
     config EXAMPLE_TASK_STACK_SIZE
-        int "UART echo example task stack size"
+        int "UART task stack size"
         range 1024 16384
         default 2048
         help

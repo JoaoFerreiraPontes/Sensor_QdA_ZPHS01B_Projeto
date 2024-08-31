@@ -3,6 +3,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 #include <stdio.h>
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/uart.h"
@@ -10,7 +11,7 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 
-#include <string.h>
+#include "bt.h"
 
 /**
  * ESP-IDF v5.0.7
@@ -27,19 +28,21 @@
 #define UART_BAUD_RATE     (CONFIG_EXAMPLE_UART_BAUD_RATE)
 #define TASK_STACK_SIZE    (CONFIG_EXAMPLE_TASK_STACK_SIZE)
 
-uint8_t check_response(uint8_t *response, int response_length);
-void reset_response_buffer_and_counter(uint8_t *response, int *response_len);
-void print_response(uint8_t *response, int response_len);
+static uint8_t check_response(uint8_t *response, int response_length);
+static void reset_buffers_and_counter(uint8_t *response, int *response_len, char *output_message);
+static void print_response(const uint8_t *response, const int response_len, char *output_message);
 
 static const char *TAG = "UART";
 const uint8_t ZPHS01B_DATA_REQUEST[] = {0xff, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
 const uint8_t ZPHS01B_DATA_REQUEST_LEN = sizeof(ZPHS01B_DATA_REQUEST)/sizeof(uint8_t);
 
-#define BUF_SIZE (1024)
-#define RESPONSE_LENGTH (26)
-#define READ_DATA_PAUSE_MS (30000)   //pause before next read in milliseconds
+#define BUF_SIZE            (1024)
+#define RESPONSE_LENGTH     (26)
+#define READ_DATA_PAUSE_MS  (30000)   //pause before next read in milliseconds
 
-static void echo_task(void *arg)
+#define RESULT_MESSAGE_SIZE (400)
+
+static void zphs01b_task(void *arg)
 {
     /* Configure parameters of an UART driver,
      * communication pins and install the driver */
@@ -62,9 +65,13 @@ static void echo_task(void *arg)
     ESP_ERROR_CHECK(uart_set_pin(UART_PORT_NUM, UART_TXD_PIN, UART_RXD_PIN, UART_RTS, UART_CTS));
 
     // Configure a buffer for the incoming data
-    uint8_t *data = (uint8_t *) malloc(BUF_SIZE);
+    uint8_t *data = (uint8_t *) calloc(BUF_SIZE, sizeof(uint8_t));
     int len = 0;
-    reset_response_buffer_and_counter(data, &len);
+    char *output_message = (char *) calloc(RESULT_MESSAGE_SIZE, sizeof(char));
+    if (data == NULL || output_message == NULL) {
+        ESP_LOGE("", "Error during allocation of memory for UART data and output message.");
+        return;
+    }
 
     while (1) {
 
@@ -72,24 +79,31 @@ static void echo_task(void *arg)
         uart_write_bytes(UART_PORT_NUM, ZPHS01B_DATA_REQUEST, ZPHS01B_DATA_REQUEST_LEN);
 
         // Read data from the ZPHS01B module
-        len = uart_read_bytes(UART_PORT_NUM, data, (BUF_SIZE - 1), pdMS_TO_TICKS(120));
+        len = uart_read_bytes(UART_PORT_NUM, data, (BUF_SIZE - 1), pdMS_TO_TICKS(200));
 
         if (check_response(data, len)) {
-            reset_response_buffer_and_counter(data, &len);
+            reset_buffers_and_counter(data, &len, output_message);
             ESP_LOGI(TAG, "error in response data checksum");
             continue;
         } else {
             ESP_LOGI(TAG, "response check is passed");
         }
 
-        print_response(data, len);
-        reset_response_buffer_and_counter(data, &len);
+        print_response(data, len, output_message);
+        if (output_message[0] != 0) {
+            send_message(output_message);
+        }
+
+        reset_buffers_and_counter(data, &len, output_message);
 
         vTaskDelay(pdMS_TO_TICKS(READ_DATA_PAUSE_MS));
     }
 }
 
-void print_response(uint8_t *response, int response_len) {
+/*
+    The output parameter has a null-terminated string with human readable measurement results.
+*/
+static void print_response(const uint8_t *response, const int response_len, char *output_message) {
     if (response_len != RESPONSE_LENGTH) {
         ESP_LOGI(TAG, "wrong reponse length in data print_response()");
         return;
@@ -123,6 +137,16 @@ void print_response(uint8_t *response, int response_len) {
     uint32_t no2_part2 = response[22];
     double no2 = (no2_part1 + no2_part2) * 0.01; //0.00 .. 10.00 ppm in 0.05 ug/m3
 
+    int rv = sprintf(output_message, "\n    all pm are in ug/m3: pm1.0 %d, pm2.5 %d, pm10 %d,"
+            "\n    CO2 %d ppm, TVOC %d in levels 0..3,"
+            "\n    temperature %.1f in Celsius, humidity %d in percents of relative humidity,"
+            "\n    CH2O %.3f in ug/m3, CO %.1f in ppm, O3 %.2f in ug/m3, NO2 %.2f in ug/m3;" ,
+            pm1_0, pm2_5, pm10, co2, voc, temp, humidity, ch2o, co, o3, no2);
+    if (rv <= 0) {
+        output_message[0] = '\0';
+    }
+
+    //for debug only
     ESP_LOGI(TAG, "\n    all pm are in ug/m3: pm1.0 %d, pm2.5 %d, pm10 %d,"
             "\n    CO2 %d ppm, TVOC %d in levels 0..3,"
             "\n    temperature %.1f in Celsius, humidity %d in percents of relative humidity,"
@@ -130,11 +154,12 @@ void print_response(uint8_t *response, int response_len) {
             pm1_0, pm2_5, pm10, co2, voc, temp, humidity, ch2o, co, o3, no2);
 }
 
-void reset_response_buffer_and_counter(uint8_t *response, int *response_len) {
+static void reset_buffers_and_counter(uint8_t *response, int *response_len, char *output_message) {
     if (*response_len < 0) {
         *response_len = BUF_SIZE;
     }
     memset(response, 0, *response_len);
+    memset(output_message, 0, RESULT_MESSAGE_SIZE);
     *response_len = 0;
 }
 
@@ -142,7 +167,7 @@ void reset_response_buffer_and_counter(uint8_t *response, int *response_len) {
 Check value=(invert( Byte1+Byte2+...+Byte24))+1
 Return: 1 if there are errors and 0 if there are no errors.
 */
-uint8_t check_response(uint8_t *response, int response_length)
+static uint8_t check_response(uint8_t *response, int response_length)
 {
     uint8_t checksum = 0;
     const char *TAG = "RESPONSE CHECK";
@@ -166,6 +191,6 @@ uint8_t check_response(uint8_t *response, int response_length)
 
 void app_main(void)
 {
-    xTaskCreate(echo_task, "uart_echo_task", TASK_STACK_SIZE, NULL, 10, NULL);
-    while(1);
+    bt_init();
+    xTaskCreate(zphs01b_task, "zphs01_task", TASK_STACK_SIZE, NULL, 10, NULL);
 }
