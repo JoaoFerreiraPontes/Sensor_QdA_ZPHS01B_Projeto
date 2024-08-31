@@ -131,13 +131,13 @@ static void process_response(const uint8_t *response, const int response_len, ch
 
     uint32_t o3_part1 = response[19]*256;
     uint32_t o3_part2 = response[20];
-    double o3 = (o3_part1 + o3_part2) * 0.01; //0.00 .. 10.00 ppm in 0.01 ug/m3
+    double o3 = (o3_part1 + o3_part2) * 0.01; //0.00 .. 10.00 ppm in 0.01
 
-    uint32_t no2_part1 = response[21]*256;
-    uint32_t no2_part2 = response[22];
-    double no2 = (no2_part1 + no2_part2) * 0.01; //0.00 .. 10.00 ppm in 0.05 ug/m3
+    uint16_t no2_part1 = response[21]*256;
+    uint16_t no2_part2 = response[22];
+    uint16_t no2 = (no2_part1 + no2_part2) * 10; //0 .. 10 000 ppb in 50 ppb
 
-    int rv = sprintf(output_message, "\npm1.0 %d ug/m3, pm2.5 %d ug/m3, pm10 %d ug/m3, CO2 %d ppm, TVOC %d lvl, CH2O %.3f ug/m3, CO %.1f ppm, O3 %.2f ug/m3, NO2 %.2f ug/m3, %.1f *C, %d RH;\n" ,
+    int rv = sprintf(output_message, "\npm1.0 %d ug/m3, pm2.5 %d ug/m3, pm10 %d ug/m3, CO2 %d ppm, TVOC %d lvl, CH2O %.3f ug/m3, CO %.1f ppm, O3 %.2f ppm, NO2 %d ppb, %.1f *C, %d RH;\n" ,
             pm1_0, pm2_5, pm10, co2, voc, ch2o, co, o3, no2, temp, humidity);
     if (rv <= 0) {
         output_message[0] = '\0';
