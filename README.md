@@ -1,7 +1,15 @@
 
-# ZPHS01B air quality module example with UART and Bluetooth. 
+# Improve your productivity with the ZPHS01B air quality module. Assess your local air quality and take actions to improve your wellness.
 
-Manually tested on ESP-WROOM-32 and POCO X6 Pro 5G.
+Measure the concentrations of the harmful gases and particles in the air to approximately estimate air pollution and take actions for better health-dependent productivity.
+
+ZPHS01B module has next sensors: pm1.0 pm2.5 pm10 particles laser sensor, infrared carbon dioxide (CO2) sensor, electrochemical formaldehyde (CH2O) sensor, electrochemical ozone (O3) sensor, electrochemical carbon monoxide (CO) sensor, VOC sensor, nitrogen dioxide (NO2) sensor, temperature and relative humidity sensor.
+
+This project combines the module, a smartphone, and an ESP32 module. ESP32 reads raw values from the sensor module, processes them, and sends them to a smartphone via Bluetooth.
+
+The documentation and specifications for the sensor module can be found here: https://www.winsen-sensor.com/product/zphs01b.html
+
+The project was manually tested with ESP-WROOM-32 and POCO X6 Pro 5G.
 
 ## How to use example
 
