@@ -28,22 +28,37 @@
 #define UART_BAUD_RATE     (CONFIG_EXAMPLE_UART_BAUD_RATE)
 #define TASK_STACK_SIZE    (CONFIG_EXAMPLE_TASK_STACK_SIZE)
 
-static uint8_t check_response(uint8_t *response, int response_length);
-static void reset_buffers_and_counter(uint8_t *response, int *response_len, char *output_message);
-static void process_response(const uint8_t *response, const int response_len, char *output_message);
+#define BUF_SIZE            (1024)
+#define RESPONSE_LENGTH     (26)
+#define READ_DATA_PAUSE_MS  (29000)   //pause before next read in milliseconds
+#define RESULT_MESSAGE_SIZE (400)
 
 static const char *TAG = "UART";
 const uint8_t ZPHS01B_DATA_REQUEST[] = {0xff, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
 const uint8_t ZPHS01B_DATA_REQUEST_LEN = sizeof(ZPHS01B_DATA_REQUEST)/sizeof(uint8_t);
 
-#define BUF_SIZE            (1024)
-#define RESPONSE_LENGTH     (26)
-#define READ_DATA_PAUSE_MS  (29000)   //pause before next read in milliseconds
+static struct air_data {
+    uint16_t pm1_0;
+    uint16_t pm2_5;
+    uint16_t pm10;
+    uint16_t co2;
+    uint8_t  voc;
+    uint16_t ch2o;
+    double co;
+    uint16_t o3;
+    uint16_t no2;
+    double temp;
+    uint16_t humidity;
+} air_data_processed;
 
-#define RESULT_MESSAGE_SIZE (400)
+static uint8_t check_response(uint8_t *response, int response_length);
+static void reset_buffers_and_counter(uint8_t *response, int *response_len, char *output_message);
+// static void process_response(const uint8_t *response, const int response_len, char *output_message);
+static void process_response(const uint8_t *response, const int response_len, struct air_data *output);
+int construct_output_message(const struct air_data *data, char *output_message);
 
-static void zphs01b_task(void *arg)
-{
+
+static void zphs01b_task(void *arg) {
     /* Configure parameters of an UART driver,
      * communication pins and install the driver */
     uart_config_t uart_config = {
@@ -89,8 +104,8 @@ static void zphs01b_task(void *arg)
             ESP_LOGI(TAG, "response check is passed");
         }
 
-        process_response(data, len, output_message);
-        if (output_message[0] != 0) {
+        process_response(data, len, &air_data_processed);
+        if (construct_output_message(&air_data_processed, output_message)) {
             send_message(output_message);
         }
 
@@ -103,50 +118,62 @@ static void zphs01b_task(void *arg)
 /*
     The output parameter has a null-terminated string with human readable measurement results.
 */
-static void process_response(const uint8_t *response, const int response_len, char *output_message) {
+static void process_response(const uint8_t *response, const int response_len, struct air_data *output) {
     if (response_len != RESPONSE_LENGTH) {
         ESP_LOGI(TAG, "wrong reponse length in data process_response()");
         return;
     }
 
-    uint16_t pm1_0 = response[2]*256 + response[3]; //0..1000 ug/m3
-    uint16_t pm2_5 = response[4]*256 + response[5]; //0..1000 ug/m3
-    uint16_t pm10 = response[6]*256 + response[7];  //0..1000 ug/m3
-    uint16_t co2 = response[8]*256 + response[9];   //0..5000 ppm
-    uint8_t  voc = response[10];                    //0..3 grades
+    output->pm1_0 = response[2]*256 + response[3]; //0..1000 ug/m3
+    output->pm2_5 = response[4]*256 + response[5]; //0..1000 ug/m3
+    output->pm10 = response[6]*256 + response[7];  //0..1000 ug/m3
+    output->co2 = response[8]*256 + response[9];   //0..5000 ppm
+    output->voc = response[10];                    //0..3 grades
 
     int temp1 = response[11]*256;
     int temp2 = response[12];
-    double temp = ((temp1 + temp2) - 435) * 0.1;   //-20.0 .. 65.0 Celsius in 0.1
+    output->temp = ((temp1 + temp2) - 435) * 0.1;   //-20.0 .. 65.0 Celsius in 0.1
 
-    uint16_t humidity = response[13]*256 + response[14]; //0..100 %RH
+    output->humidity = response[13]*256 + response[14]; //0..100 %RH
 
     uint16_t ch2o_part1 = response[15]*256;
     uint16_t ch2o_part2 = response[16];
-    uint16_t ch2o = ch2o_part1 + ch2o_part2; //0..6250 ug/m3
+    output->ch2o = ch2o_part1 + ch2o_part2; //0..6250 ug/m3
 
     uint32_t co_part1 = response[17]*256;
     uint32_t co_part2 = response[18];
-    double co = (co_part1 + co_part2) * 0.1; //0.0 .. 500.0 in 0.1 ppm
+    output->co = (co_part1 + co_part2) * 0.1; //0.0 .. 500.0 in 0.1 ppm
 
-    uint32_t o3_part1 = response[19]*256;
-    uint32_t o3_part2 = response[20];
-    double o3 = (o3_part1 + o3_part2) * 0.01; //0.00 .. 10.00 ppm in 0.01
+    uint16_t o3_part1 = response[19]*256;
+    uint16_t o3_part2 = response[20];
+    output->o3 = (o3_part1 + o3_part2) * 10; //0 .. 10000 ppb
 
     uint16_t no2_part1 = response[21]*256;
     uint16_t no2_part2 = response[22];
-    uint16_t no2 = (no2_part1 + no2_part2) * 10; //0 .. 10 000 ppb in 50 ppb
-
-    int rv = sprintf(output_message, "\npm1.0 %d ug/m3, pm2.5 %d ug/m3, pm10 %d ug/m3, CO2 %d ppm, TVOC %d lvl, CH2O %d ug/m3, CO %.1f ppm, O3 %.2f ppm, NO2 %d ppb, %.1f *C, %d RH;\n" ,
-            pm1_0, pm2_5, pm10, co2, voc, ch2o, co, o3, no2, temp, humidity);
-    if (rv <= 0) {
-        output_message[0] = '\0';
-    }
-
-    ESP_LOGI("", "%s", output_message);
+    output->no2 = (no2_part1 + no2_part2) * 10; //0 .. 10 000 ppb in 50 ppb
 }
 
-static void reset_buffers_and_counter(uint8_t *response, int *response_len, char *output_message) {
+/*
+    return: 0 in case of error, 1 if all is ok.
+*/
+int construct_output_message(const struct air_data *data, char *output_message) {
+    if (output_message == NULL) {
+        return 0;
+    }
+
+    int rv = sprintf(output_message, "\npm1.0 %d ug/m3, pm2.5 %d ug/m3, pm10 %d ug/m3, CO2 %d ppm, TVOC %d lvl, CH2O %d ug/m3, CO %.1f ppm, O3 %d ppb, NO2 %d ppb, %.1f *C, %d RH;\n" ,
+            data->pm1_0, data->pm2_5, data->pm10, data->co2, data->voc, data->ch2o, data->co, data->o3, data->no2, data->temp, data->humidity);
+    if (rv <= 0) {
+        output_message[0] = '\0';
+        return 0;
+    }
+
+    ESP_LOGI("", "%s", output_message); //for debug
+    return 1;
+}
+
+static void reset_buffers_and_counter(uint8_t *response, int *response_len, char *output_message)
+{
     if (*response_len < 0) {
         *response_len = BUF_SIZE;
     }
