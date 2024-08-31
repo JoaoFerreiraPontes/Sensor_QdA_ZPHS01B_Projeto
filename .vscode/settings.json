@@ -8,6 +8,10 @@
   "idf.portWin": "COM5",
   "idf.flashType": "UART",
   "files.associations": {
-    "uart.h": "c"
+    "uart.h": "c",
+    "esp_log.h": "c",
+    "task.h": "c",
+    "freertos.h": "c",
+    "string.h": "c"
   }
 }
