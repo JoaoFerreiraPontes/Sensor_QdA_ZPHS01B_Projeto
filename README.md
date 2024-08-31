@@ -55,7 +55,7 @@ This will show you logs with sensor data and bluetooth information of connected 
 ## Example Output
 
 There is an example of a string with air pollution contamination as measured by ZPHS01B air: 
-`pm1.0 7 ug/m3, pm2.5 9 ug/m3, pm10 9 ug/m3, CO2 873 ppm, TVOC 0 lvl, CH2O 0.400 ug/m3, CO 0.5 ppm, O3 0.02 ppm, NO2 10 ppb, 27.3 *C, 79 RH;`
+`pm1.0 5 ug/m3, pm2.5 8 ug/m3, pm10 8 ug/m3, CO2 683 ppm, TVOC 0 lvl, CH2O 27 ug/m3, CO 0.5 ppm, O3 0.02 ppm, NO2 10 ppb, 26.3 *C, 72 RH;`
 
 ## Troubleshooting
 
