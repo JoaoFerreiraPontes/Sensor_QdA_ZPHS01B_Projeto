@@ -30,7 +30,7 @@
 
 static uint8_t check_response(uint8_t *response, int response_length);
 static void reset_buffers_and_counter(uint8_t *response, int *response_len, char *output_message);
-static void print_response(const uint8_t *response, const int response_len, char *output_message);
+static void process_response(const uint8_t *response, const int response_len, char *output_message);
 
 static const char *TAG = "UART";
 const uint8_t ZPHS01B_DATA_REQUEST[] = {0xff, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
@@ -38,7 +38,7 @@ const uint8_t ZPHS01B_DATA_REQUEST_LEN = sizeof(ZPHS01B_DATA_REQUEST)/sizeof(uin
 
 #define BUF_SIZE            (1024)
 #define RESPONSE_LENGTH     (26)
-#define READ_DATA_PAUSE_MS  (30000)   //pause before next read in milliseconds
+#define READ_DATA_PAUSE_MS  (29000)   //pause before next read in milliseconds
 
 #define RESULT_MESSAGE_SIZE (400)
 
@@ -89,7 +89,7 @@ static void zphs01b_task(void *arg)
             ESP_LOGI(TAG, "response check is passed");
         }
 
-        print_response(data, len, output_message);
+        process_response(data, len, output_message);
         if (output_message[0] != 0) {
             send_message(output_message);
         }
@@ -103,9 +103,9 @@ static void zphs01b_task(void *arg)
 /*
     The output parameter has a null-terminated string with human readable measurement results.
 */
-static void print_response(const uint8_t *response, const int response_len, char *output_message) {
+static void process_response(const uint8_t *response, const int response_len, char *output_message) {
     if (response_len != RESPONSE_LENGTH) {
-        ESP_LOGI(TAG, "wrong reponse length in data print_response()");
+        ESP_LOGI(TAG, "wrong reponse length in data process_response()");
         return;
     }
 
@@ -137,21 +137,13 @@ static void print_response(const uint8_t *response, const int response_len, char
     uint32_t no2_part2 = response[22];
     double no2 = (no2_part1 + no2_part2) * 0.01; //0.00 .. 10.00 ppm in 0.05 ug/m3
 
-    int rv = sprintf(output_message, "\n    all pm are in ug/m3: pm1.0 %d, pm2.5 %d, pm10 %d,"
-            "\n    CO2 %d ppm, TVOC %d in levels 0..3,"
-            "\n    temperature %.1f in Celsius, humidity %d in percents of relative humidity,"
-            "\n    CH2O %.3f in ug/m3, CO %.1f in ppm, O3 %.2f in ug/m3, NO2 %.2f in ug/m3;" ,
-            pm1_0, pm2_5, pm10, co2, voc, temp, humidity, ch2o, co, o3, no2);
+    int rv = sprintf(output_message, "\npm1.0 %d ug/m3, pm2.5 %d ug/m3, pm10 %d ug/m3, CO2 %d ppm, TVOC %d lvl, CH2O %.3f ug/m3, CO %.1f ppm, O3 %.2f ug/m3, NO2 %.2f ug/m3, %.1f *C, %d RH;\n" ,
+            pm1_0, pm2_5, pm10, co2, voc, ch2o, co, o3, no2, temp, humidity);
     if (rv <= 0) {
         output_message[0] = '\0';
     }
 
-    //for debug only
-    ESP_LOGI(TAG, "\n    all pm are in ug/m3: pm1.0 %d, pm2.5 %d, pm10 %d,"
-            "\n    CO2 %d ppm, TVOC %d in levels 0..3,"
-            "\n    temperature %.1f in Celsius, humidity %d in percents of relative humidity,"
-            "\n    CH2O %.3f in ug/m3, CO %.1f in ppm, O3 %.2f in ug/m3, NO2 %.2f in ug/m3;" ,
-            pm1_0, pm2_5, pm10, co2, voc, temp, humidity, ch2o, co, o3, no2);
+    ESP_LOGI("", "%s", output_message);
 }
 
 static void reset_buffers_and_counter(uint8_t *response, int *response_len, char *output_message) {

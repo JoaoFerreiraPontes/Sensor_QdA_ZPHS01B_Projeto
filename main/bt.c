@@ -25,17 +25,17 @@
 
 #include "bt.h"
 
-#define SPP_TAG "SPP_ACCEPTOR_DEMO"
-#define SPP_SERVER_NAME "SPP_SERVER"
+#define SPP_TAG             "SPP_ACCEPTOR_DEMO"
+#define SPP_SERVER_NAME     "SPP_SERVER"
 #define EXAMPLE_DEVICE_NAME "ESP_SPP_ACCEPTOR"
-#define SPP_SHOW_DATA 1
-#define SPP_SHOW_SPEED 1
-#define SPP_SHOW_MODE SPP_SHOW_SPEED    /*Choose show mode: show data or speed*/
+#define SPP_SHOW_DATA       0
+#define SPP_SHOW_SPEED      1
+#define SPP_SHOW_MODE       SPP_SHOW_SPEED    /*Choose show mode: show data or speed*/
 
 static const esp_bt_pin_code_t PIN_CODE = {'1', '0', '1', '0', '1', '0', '1', '0', '1'};
 #define PIN_CODE_LEN (9)
 
-static uint32_t spp_handle = 0;         // keeps handle of current active SPP BT connection
+static uint32_t spp_handle = 0;             // keeps handle of current active SPP BT connection
 
 static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_CB;
 static const bool esp_spp_enable_l2cap_ertm = true;

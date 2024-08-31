@@ -1,50 +1,32 @@
-| Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-S2 | ESP32-S3 |
-| ----------------- | ----- | -------- | -------- | -------- | -------- |
 
-# UART Echo Example
+# ZPHS01B air quality module example with UART and Bluetooth. 
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
-
-This example demonstrates how to utilize UART interfaces by echoing back to the sender any data received on
-configured UART.
+Manually tested on ESP-WROOM-32 and POCO X6 Pro 5G.
 
 ## How to use example
 
 ### Hardware Required
 
-The example can be run on any ESP32, ESP32-S and ESP32-C series based development board connected to a computer with a single USB cable for flashing and
-monitoring. The external interface should have 3.3V outputs. You may use e.g. 3.3V compatible USB-to-Serial dongle.
+The example can be run on any having bluetooth ESP32, ESP32-S and ESP32-C series based development board connected to a computer with a single USB cable for flashing. 
+Connection to computer can be replaced to connection to powerbank to add portability for DIY device. 
+Main idea of this example is to collect dataabout air pollution with help of ZPHS01B sensor and send it 
+to Android device with the app "Serial Bluetooth Terminal" for further use and processing. 
 
 ### Setup the Hardware
 
-Connect the external serial interface to the board as follows.
+Connect the ZPHS01B serial interface to the ESP32 board as follows.
 
 ```
-  -----------------------------------------------------------------------------------------
-  | Target chip Interface | Kconfig Option     | Default ESP Pin      | External UART Pin |
-  | ----------------------|--------------------|----------------------|--------------------
-  | Transmit Data (TxD)   | EXAMPLE_UART_TXD   | GPIO4                | RxD               |
-  | Receive Data (RxD)    | EXAMPLE_UART_RXD   | GPIO5                | TxD               |
-  | Ground                | n/a                | GND                  | GND               |
-  -----------------------------------------------------------------------------------------
+  ---------------------------------------------------------------------
+  | ZPHS01B Interface     | Kconfig Option     | Default ESP Pin      |
+  | ----------------------|--------------------|----------------------|
+  | Voltage (Vc)          | n/a                | 5V                   |
+  | Receive Data (RxD)    | EXAMPLE_UART_TXD   | GPIO4                |
+  | Transmit Data (TxD)   | EXAMPLE_UART_RXD   | GPIO5                |
+  | Ground                | n/a                | GND                  |
+  ---------------------------------------------------------------------
 ```
 Note: Some GPIOs can not be used with certain chips because they are reserved for internal use. Please refer to UART documentation for selected target.
-
-Optionally, you can set-up and use a serial interface that has RTS and CTS signals in order to verify that the
-hardware control flow works. Connect the extra signals according to the following table, configure both extra pins in
-the example code `uart_echo_example_main.c` by replacing existing `UART_PIN_NO_CHANGE` macros with the appropriate pin
-numbers and configure UART1 driver to use the hardware flow control by setting `.flow_ctrl = UART_HW_FLOWCTRL_CTS_RTS`
-and adding `.rx_flow_ctrl_thresh = 122` to the `uart_config` structure.
-
-```
-  ---------------------------------------------------------------
-  | Target chip Interface | Macro           | External UART Pin |
-  | ----------------------|-----------------|--------------------
-  | Transmit Data (TxD)   | ECHO_TEST_RTS   | CTS               |
-  | Receive Data (RxD)    | ECHO_TEST_CTS   | RTS               |
-  | Ground                | n/a             | GND               |
-  ---------------------------------------------------------------
-```
 
 ### Configure the project
 
@@ -53,6 +35,10 @@ The default Kconfig values can be changed such as: EXAMPLE_TASK_STACK_SIZE, EXAM
 ```
 idf.py menuconfig
 ```
+For additional details of configuration you can check next examples in ESP-IDF v5.0.7:
+`uart_echo_example`, `bt_spp_acceptor`.
+
+For more security and to make data private you should switch off SSP in menuconfig of project before build and flash Components -> Bluetooth -> Bluedroid. It will make mandatory PIN check before first connection to ESP32 from external device via bluetooth. The PIN can be set in code up to 16 digits in length.
 
 ### Build and Flash
 
@@ -61,16 +47,16 @@ Build the project and flash it to the board, then run monitor tool to view seria
 ```
 idf.py -p PORT flash monitor
 ```
+This will show you logs with sensor data and bluetooth information of connected device in case if all is ok and is done right.
 
 (To exit the serial monitor, type ``Ctrl-]``.)
 
-See the Getting Started Guide for full steps to configure and use ESP-IDF to build projects.
 
 ## Example Output
 
-Type some characters in the terminal connected to the external serial interface. As result you should see echo in the same terminal which you used for typing the characters. You can verify if the echo indeed comes from ESP board by
-disconnecting either `TxD` or `RxD` pin: no characters will appear when typing.
+There is an example of a string with air pollution contamination as measured by ZPHS01B air: 
+`pm1.0 4 ug/m3, pm2.5 5 ug/m3, pm10 5 ug/m3, CO2 461 ppm, TVOC 0 lvl, CH2O 0.210 ug/m3, CO 0.5 ppm, O3 0.02 ug/m3, NO2 0.01 ug/m3, 26.8 *C, 68 RH;`
 
 ## Troubleshooting
 
-You are not supposed to see the echo in the terminal which is used for flashing and monitoring, but in the other UART configured through Kconfig can be used.
+Double check connection of wires to ESP32 module, between ESP32 module and sensor module, check settings in menuconfig for bluetooth (SSP off, BLE off, classic bluetooth and SPP are on, Bluetooth controller mode is BR/EDR Only) and for UART (9600 baudrate).
