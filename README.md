@@ -1,7 +1,7 @@
 
 # Utilização do sensor modular ZPHS01B para medição da qualidade do ar, através da ESPRESSIF SDK
 
-**Autor:** [**JOÃO VICTOR PERES FERERIRA PONTES**git add]
+**Autor:** [**JOÃO VICTOR PERES FERERIRA PONTES**]
 
 Este projeto tem como objetivo a medição da qualidade do ar como um todo, focando na detecção e análise das concentrações de gases e partículas prejudiciais no ambiente. O sistema permite uma estimativa aproximada da poluição do ar, visando a tomada de ações informadas para a melhoria do bem-estar e da produtividade, diretamente impactados pela qualidade do ar.
 
