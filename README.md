@@ -1,7 +1,7 @@
 
 # Utilização do sensor modular ZPHS01B para medição da qualidade do ar, através da ESPRESSIF SDK
 
-**Autor:** [JOÃO VICTOR PERES FERERIRA PONTES]
+**Autor:** [**JOÃO VICTOR PERES FERERIRA PONTES**git add]
 
 Este projeto tem como objetivo a medição da qualidade do ar como um todo, focando na detecção e análise das concentrações de gases e partículas prejudiciais no ambiente. O sistema permite uma estimativa aproximada da poluição do ar, visando a tomada de ações informadas para a melhoria do bem-estar e da produtividade, diretamente impactados pela qualidade do ar.
 
@@ -64,9 +64,9 @@ Isso mostrará os logs com os dados do sensor e as informações de Bluetooth do
 (Para sair do monitor serial, digite ``Ctrl-]``.)
 
 
-## Example Output
+## Exemplo de SAÍDA
 
-Há um exemplo de uma string com a contaminação do ar, conforme medida pelo ZPHS01B:
+Este é um exemplo de uma string com a contaminação do ar, conforme medida pelo ZPHS01B
 `pm1.0 Low, pm2.5 Low, pm10 Low, CO2 Low, TVOC Low, CH2O Low, CO Low, O3 Low, NO2 Low, RH Med.;
 
 pm1.0 7 ug/m3, pm2.5 9 ug/m3, pm10 9 ug/m3, CO2 526 ppm, TVOC 0 lvl, CH2O 6 ug/m3, CO 0.5 ppm, O3 20 ppb, NO2 10 ppb, 27.1 *C, 46 RH;`
