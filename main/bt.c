@@ -30,12 +30,12 @@
 #define EXAMPLE_DEVICE_NAME "ESP_SPP_ACCEPTOR"
 #define SPP_SHOW_DATA       0
 #define SPP_SHOW_SPEED      1
-#define SPP_SHOW_MODE       SPP_SHOW_SPEED    /*Choose show mode: show data or speed*/
+#define SPP_SHOW_MODE       SPP_SHOW_SPEED    /*Escolha o modo de exibição: mostrar dados ou velocidade*/
 
 static const esp_bt_pin_code_t PIN_CODE = {'1', '0', '1', '0', '1', '0', '1', '0', '1'};
 #define PIN_CODE_LEN (9)
 
-static uint32_t spp_handle = 0;             // keeps handle of current active SPP BT connection
+static uint32_t spp_handle = 0;            // mantém o controle da conexão SPP BT ativa atual
 
 static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_CB;
 static const bool esp_spp_enable_l2cap_ertm = true;
@@ -71,7 +71,7 @@ static void print_speed(void)
 }
 
 /*
-This function uses zero terminated string with message.
+Esta função usa uma string terminada em zero com a mensagem.
 */
 void send_message(const char *message)
 {
@@ -125,12 +125,13 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         break;
     case ESP_SPP_DATA_IND_EVT:
 #if (SPP_SHOW_MODE == SPP_SHOW_DATA)
-        /*
-         * We only show the data in which the data length is less than 128 here. If you want to print the data and
-         * the data rate is high, it is strongly recommended to process them in other lower priority application task
-         * rather than in this callback directly. Since the printing takes too much time, it may stuck the Bluetooth
-         * stack and also have a effect on the throughput!
-         */
+        
+/*
+* Mostramos aqui apenas os dados cujo comprimento é menor que 128. Se você quiser imprimir os dados e
+* a taxa de dados for alta, é altamente recomendável processá-los em outra tarefa de aplicativo de menor prioridade
+* em vez de processá-los diretamente neste retorno de chamada. Como a impressão leva muito tempo, ela pode travar a pilha Bluetooth
+* e também afetar a taxa de transferência de dados.
+*/
         ESP_LOGI(SPP_TAG, "ESP_SPP_DATA_IND_EVT len:%d handle:%"PRIu32,
                  param->data_ind.len, param->data_ind.handle);
         if (param->data_ind.len < 128) {
@@ -158,7 +159,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         spp_handle = param->srv_open.handle;
         gettimeofday(&time_old, NULL);
 
-        send_message("Hello from ESP32!");  //TODO remove this, for debug purposes
+        send_message("Hello from ESP32!");  // Você pode remover, caso queira concertar bugs.
 
         break;
     case ESP_SPP_SRV_STOP_EVT:
@@ -271,7 +272,7 @@ void bt_init(void)
     esp_spp_cfg_t bt_spp_cfg = {
         .mode = esp_spp_mode,
         .enable_l2cap_ertm = esp_spp_enable_l2cap_ertm,
-        .tx_buffer_size = 0, /* Only used for ESP_SPP_MODE_VFS mode */
+        .tx_buffer_size = 0,  /* Usado somente para o modo ESP_SPP_MODE_VFS */
     };
     if ((ret = esp_spp_enhanced_init(&bt_spp_cfg)) != ESP_OK) {
         ESP_LOGE(SPP_TAG, "%s spp init failed: %s\n", __func__, esp_err_to_name(ret));
@@ -279,16 +280,15 @@ void bt_init(void)
     }
 
 #if (CONFIG_BT_SSP_ENABLED == true)
-    /* Set default parameters for Secure Simple Pairing */
+    /* Definir parâmetros padrão para o Secure Simple Pairing */
     esp_bt_sp_param_t param_type = ESP_BT_SP_IOCAP_MODE;
     esp_bt_io_cap_t iocap = ESP_BT_IO_CAP_IO;
     esp_bt_gap_set_security_param(param_type, &iocap, sizeof(uint8_t));
 #endif
-
-    /*
-     * Set default parameters for Legacy Pairing
-     * Use variable pin, input pin code when pairing
-     */
+/*
+* Definir parâmetros padrão para o emparelhamento legado
+* Usar PIN variável, inserir código PIN ao emparelhar
+*/
     esp_bt_pin_type_t pin_type = ESP_BT_PIN_TYPE_FIXED;
     esp_bt_gap_set_pin(pin_type, PIN_CODE_LEN, PIN_CODE);
 

@@ -1,7 +1,4 @@
-/* ZPHS01B Example
-   This software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
+
 #include <stdio.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
@@ -16,8 +13,8 @@
 
 /**
  * ESP-IDF v5.0.7
- * - Port: configured UART, baudrate 9600
- * - Pin assignment: see defines below (See Kconfig)
+ * - Port: configuração UART, baudrate 9600
+ * - Atribuição de pinos: veja as definições abaixo (veja Kconfig)
  */
 
 #define UART_TXD_PIN (CONFIG_EXAMPLE_UART_TXD)

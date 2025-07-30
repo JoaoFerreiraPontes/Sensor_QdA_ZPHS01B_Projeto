@@ -5,13 +5,14 @@
     "interface/ftdi/esp32_devkitj_v1.cfg",
     "target/esp32.cfg"
   ],
-  "idf.portWin": "COM5",
+  "idf.portWin": "COM3",
   "idf.flashType": "UART",
   "files.associations": {
     "uart.h": "c",
     "esp_log.h": "c",
     "task.h": "c",
     "freertos.h": "c",
-    "string.h": "c"
+    "string.h": "c",
+    "zphs01b.h": "c"
   }
 }
