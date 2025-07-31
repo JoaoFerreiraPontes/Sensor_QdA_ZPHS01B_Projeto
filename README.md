@@ -1,4 +1,4 @@
-# Utilização do sensor modular ZPHS01B para medição da qualidade do ar, com um ESP32WROOM DevKit 4, através da extensão ESPRESSIFSDK (ESP-IDF)
+# Utilização do sensor modular ZPHS01B para medição da qualidade do ar, com um ESP32WROOM DevKit 4, através da extensão ESPRESSIF SDK (ESP-IDF)
 
 ## Autor
 **JOÃO VICTOR PERES FERERIRA PONTES**
