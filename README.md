@@ -87,13 +87,13 @@ Com o ambiente e o hardware configurados, o uso é simplificado pela extensão d
 ### Funcionalidades da Extensão (Botões)
 A extensão adiciona uma barra na parte inferior do VS Code com ícones para as principais ações. A imagem que você forneceu mostra o menu de comandos, e aqui estão os mais importantes:
 
--   `⚙️ SDK Configuration Editor`: Abre uma interface gráfica para o `menuconfig`, permitindo alterar configurações do projeto (como os pinos do sensor).
--   `✔️ Full Clean`: Apaga todos os arquivos de compilação antigos. Útil para resolver problemas estranhos de compilação.
--   `[Build] Build Project`: Apenas compila o código para verificar se há erros.
--   `⚡️ Flash Device`: Grava o último firmware compilado na placa.
--   `🖥️ Monitor Device`: Abre o terminal para ver a saída serial da placa.
--   `🔥 ESP-IDF: Build, Flash and Monitor`: O comando mais útil. Ele executa as três ações acima em sequência: compila, grava e abre o monitor.
--   `Erase Flash`: (No menu "Advanced") Apaga completamente a memória flash do ESP32.
+-   **`⚙️ SDK Configuration Editor`**: Abre uma interface gráfica para o `menuconfig`, permitindo alterar configurações do projeto (como os pinos do sensor).
+-   **`✔️ Full Clean`**: Apaga todos os arquivos de compilação antigos. Útil para resolver problemas estranhos de compilação.
+-   **`[Build] Build Project`**: Apenas compila o código para verificar se há erros.
+-   **`⚡️ Flash Device`**: Grava o último firmware compilado na placa.
+-   **`🖥️ Monitor Device`**: Abre o terminal para ver a saída serial da placa.
+-   **`🔥 ESP-IDF: Build, Flash and Monitor`**: O comando mais útil. Ele executa as três ações acima em sequência: compila, grava e abre o monitor.
+-   **`Erase Flash`**: (No menu "Advanced") Apaga completamente a memória flash do ESP32.
 
 ### Passo a Passo da Execução
 1.  Com o projeto aberto no VS Code, verifique a barra inferior e selecione a porta **COM correta**.
