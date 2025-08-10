@@ -96,6 +96,10 @@ Esta seção detalha o comportamento do software sob a perspectiva da engenharia
 
 ## Guia de Instalação e Configuração
 
+**ATENÇÃO**: Caso você encontre dificuldades em seguir esse guia, você pode assistir o meu tutorial de instalação e configuração, aonde eu realizo o passo a passo completo. 
+
+Acesse o vídeo do tutorial através deste link este [link](https://www.youtube.com/watch?v=RDTO5KKnGzM).
+
 Este tutorial assume que você já possui o **Visual Studio Code** instalado.
 
 ### Passo 1: Instalação do Driver USB
