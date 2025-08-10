@@ -25,7 +25,7 @@ O módulo ZPHS01B é um sensor que integra diversos componentes de detecção av
     * Compostos Orgânicos Voláteis (VOC)
 * **Temperatura e Umidade Relativa**
 
-A documentação completa do sensor pode ser encontrada [neste link](https://www.winsen-sensor.com/d/files/PDF/zphs01b-multi-in-one-module-v1_1.pdf).
+A documentação completa do sensor pode ser encontrada [neste link](https://www.winsen-sensor.com/d/files/manual/zphs01b.pdf).
 
 ## Funcionalidades do Sistema (Análise de Casos de Uso)
 
@@ -33,14 +33,14 @@ Esta seção detalha o comportamento do software sob a perspectiva da engenharia
 
 ### Casos de Uso Detalhados
 
-#### UC01: Configurar o Intervalo de Medição
+### UC01: Configurar o Intervalo de Medição
 
 * **Ator:** Usuário Final
 * **Resumo:** O usuário define a frequência com que os dados do sensor são lidos e transmitidos pelo sistema.
 * **Pré-condições:**
     1.  O dispositivo ESP32 deve estar ligado.
     2.  O Usuário Final deve ter um terminal serial (via USB ou Bluetooth) conectado e visível.
-* **Fluxo Principal (Caminho Feliz):**
+* **Fluxo Principal:**
     1.  O sistema é iniciado ou reiniciado.
     2.  O sistema exibe no terminal a mensagem de boas-vindas e o prompt para inserir a frequência em milissegundos.
     3.  O usuário digita um valor numérico (ex: `5000`). O sistema exibe cada dígito no terminal conforme é digitado.
@@ -54,7 +54,7 @@ Esta seção detalha o comportamento do software sob a perspectiva da engenharia
 * **Pós-condição:**
     * A frequência de medição do sistema é definida com o valor inserido pelo usuário ou com o valor padrão.
 
-#### UC02: Monitorar a Qualidade do Ar via Conexão Serial
+### UC02: Monitorar a Qualidade do Ar via Conexão Serial
 
 * **Ator:** Usuário Final
 * **Resumo:** O usuário visualiza o fluxo de dados do sensor em tempo real através de um terminal conectado via USB.
@@ -62,7 +62,7 @@ Esta seção detalha o comportamento do software sob a perspectiva da engenharia
     1.  O dispositivo deve estar conectado ao computador via cabo USB.
     2.  O software do monitor serial (ex: no VS Code, Arduino IDE) deve estar aberto e conectado à porta COM correta.
     3.  O Caso de Uso UC01 (Configurar o Intervalo de Medição) deve ter sido concluído com sucesso.
-* **Fluxo Principal (Caminho Feliz):**
+* **Fluxo Principal:**
     1.  No intervalo de tempo definido, o sistema solicita e recebe os dados brutos do sensor ZPHS01B.
     2.  O sistema processa e formata os dados em uma string legível, com identificação para cada parâmetro (PM2.5, CO2, Temp, etc.).
     3.  O sistema envia a string formatada para a saída serial (UART).
@@ -73,7 +73,7 @@ Esta seção detalha o comportamento do software sob a perspectiva da engenharia
 * **Pós-condição:**
     * O usuário se mantém continuamente informado sobre as condições da qualidade do ar no ambiente.
 
-#### UC03: Monitorar a Qualidade do Ar via Bluetooth
+### UC03: Monitorar a Qualidade do Ar via Bluetooth
 
 * **Ator:** Usuário Final
 * **Resumo:** O usuário visualiza os dados do sensor em um dispositivo móvel (smartphone/tablet) sem a necessidade de fios.
@@ -82,7 +82,7 @@ Esta seção detalha o comportamento do software sob a perspectiva da engenharia
     2.  O Bluetooth do smartphone do usuário está ativado.
     3.  O usuário possui um aplicativo de terminal serial Bluetooth instalado.
     4.  O Caso de Uso UC01 foi concluído.
-* **Fluxo Principal (Caminho Feliz):**
+* **Fluxo Principal:**
     1.  O sistema inicializa e anuncia seu serviço Bluetooth SPP com o nome `ESP_SPP_ACCEPTOR`.
     2.  O usuário, em seu smartphone, busca por dispositivos Bluetooth e encontra o `ESP_SPP_ACCEPTOR`.
     3.  O usuário solicita o pareamento com o dispositivo.
@@ -111,7 +111,7 @@ Para que seu computador reconheça a placa ESP32, é necessário instalar um dri
 
 A maneira mais fácil de configurar o ambiente de desenvolvimento é usando o instalador oficial da Espressif.
 
-1.  Acesse a página de releases do ESP-IDF no GitHub: [ESP-IDF Releases](https://github.com/espressif/esp-idf/releases).
+1.  Acesse a página de releases do ESP-IDF no GitHub: [ESP-IDF Releases](https://docs.espressif.com/projects/esp-idf/en/v5.5/esp32/get-started/windows-setup.html).
 2.  Procure pela **versão 5.5** e baixe o arquivo `esp-idf-tools-setup-online-*.exe`.
 3.  Execute o instalador e siga os passos:
     * Aceite os termos da licença.
@@ -195,33 +195,4 @@ Após compilar o projeto (`build`), o ESP-IDF exibe um sumário de como a memór
 * **IRAM (Instruction RAM):** É uma porção da memória RAM usada para executar trechos de código que precisam de altíssima velocidade (como partes críticas do Wi-Fi ou interrupções).
 * **DRAM (Data RAM):** É a memória de trabalho principal do seu programa, similar à RAM de um computador. Ela armazena as variáveis que mudam durante a execução.
     * **.data:** Guarda variáveis globais e estáticas que são inicializadas com um valor diferente de zero.
-    * **.bss:** Guarda variáveis globais e estáticas que são inicializadas com zero (uma otimização para economizar espaço na Flash).
-* **RTC FAST/SLOW (Memória de Baixo Consumo):** É uma pequena quantidade de memória que pode permanecer ligada mesmo quando o ESP32 está em modo de sono profundo (deep sleep).
-
-Em resumo, a tabela de memória mostra o espaço que seu programa ocupa e quanta memória RAM está sendo utilizada para as variáveis e o funcionamento do sistema em tempo de execução.
-
-## Exemplo de Saída
-
-```
-Iniciando em 10 segundos...
-
-
---- Sensor de Qualidade do Ar com ZPHS01B ---
-Este projeto utiliza o sensor ZPHS01B, um modulo multi-parametros que mede
-particulas (PM1.0, PM2.5, PM10), gases (CO2, CO, O3, NO2), Compostos Organicos
-Volateis (VOC), formaldeido (CH2O), temperatura e umidade.
-Autor do Projeto: Joao Abrantes Pontes
-Repositorio do Projeto: [https://github.com/JoaoFerreiraPontes/Sensor_QdA_ZPHS01B_Projeto](https://github.com/JoaoFerreiraPontes/Sensor_QdA_ZPHS01B_Projeto)
-
-AVISO IMPORTANTE:
-O sensor requer um periodo de calibração de 10 minutos para que as medicoes
-se estabilizem. Recomenda-se utilizar os dados para tratamento real somente
-apos este periodo.
-
-I (11211) ZPHS01B_UART: Driver UART do sensor ZPHS01B inicializado.
-------------------------------------------------------------------
-Digite APENAS NUMEROS para definir o intervalo em milissegundos (ms).
-Valores aceitos: de 1500ms a 29000ms.
-Pressione Enter para confirmar ou aguarde 180 segundos para usar o tempo padrao (5000ms).
-Intervalo: 
-```
+    * **.bss:** Guarda variáveis globais e estáticas
