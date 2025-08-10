@@ -57,6 +57,33 @@ static struct air_data {
     uint16_t humidity; lvl_e humidity_lvl;
 } air_data_processed;
 
+// --- COEFICIENTES DE CALIBRAÇÃO ---
+// Estrutura para armazenar os offsets de calibração para cada medida.
+// Um offset positivo aumenta o valor final, um negativo diminui.
+static struct calibration_offsets {
+    int16_t temp_offset;     // Offset para a fórmula da temperatura.
+    int16_t pm1_0_offset;
+    int16_t pm2_5_offset;
+    int16_t pm10_offset;
+    int16_t co2_offset;
+    int16_t ch2o_offset;     // Unidade: ug/m3 (antes de converter para mg/m3)
+    double  co_offset;       // Unidade: ppm
+    int16_t o3_offset;       // Unidade: ppb
+    int16_t no2_offset;      // Unidade: ppb
+    int16_t humidity_offset; // Unidade: %RH
+} cal_offsets = {
+    .temp_offset = 50,       
+    .pm1_0_offset = 0,
+    .pm2_5_offset = 0,
+    .pm10_offset = 0,
+    .co2_offset = 0,
+    .ch2o_offset = 0,
+    .co_offset = 0.0,
+    .o3_offset = 0,
+    .no2_offset = 0,
+    .humidity_offset = 0
+};
+
 // --- PROTÓTIPOS DE FUNÇÕES ESTÁTICAS ---
 // (Declarações antecipadas das funções usadas apenas neste arquivo)
 static int construct_output_message(const struct air_data *d, char *output_message);
@@ -242,18 +269,37 @@ static int construct_output_message(const struct air_data *d, char *output_messa
  */
 static void process_response(const uint8_t *response, const int response_len, struct air_data *output) {
     if (response_len != RESPONSE_LENGTH) return;
-    // Exemplo: PM1.0 é formado por 2 bytes. Multiplica-se o primeiro por 256 e soma com o segundo.
-    output->pm1_0 = response[2]*256 + response[3]; output->pm1_0_lvl = get_pm1_0_lvl(output->pm1_0);
-    output->pm2_5 = response[4]*256 + response[5]; output->pm2_5_lvl = get_pm2_5_lvl(output->pm2_5);
-    output->pm10 = response[6]*256 + response[7]; output->pm10_lvl = get_pm10_lvl(output->pm10);
-    output->co2 = response[8]*256 + response[9]; output->co2_lvl = get_co2_lvl(output->co2);
-    output->voc = response[10]; output->voc_lvl = get_voc_lvl(output->voc);
-    output->temp = (((response[11]*256) + response[12]) - 450) * 0.1;
-    output->humidity = response[13]*256 + response[14]; output->humidity_lvl = get_humidity_lvl(output->humidity);
-    output->ch2o = response[15]*256 + response[16]; output->ch2o_lvl = get_ch2o_lvl(output->ch2o);
-    output->co = (response[17]*256 + response[18]) * 0.1; output->co_lvl = get_co_lvl(output->co);
-    output->o3 = (response[19]*256 + response[20]) * 10; output->o3_lvl = get_o3_lvl(output->o3);
-    output->no2 = (response[21]*256 + response[22]) * 10; output->no2_lvl = get_no2_lvl(output->no2);
+
+    // Converte os bytes brutos para valores numéricos e aplica os offsets de calibração
+    output->pm1_0    = (response[2] * 256 + response[3])   + cal_offsets.pm1_0_offset;
+    output->pm2_5    = (response[4] * 256 + response[5])   + cal_offsets.pm2_5_offset;
+    output->pm10     = (response[6] * 256 + response[7])   + cal_offsets.pm10_offset;
+    output->co2      = (response[8] * 256 + response[9])   + cal_offsets.co2_offset;
+    output->voc      = response[10]; // VOC é um nível (0-3), sem offset numérico.
+    output->humidity = (response[13] * 256 + response[14]) + cal_offsets.humidity_offset;
+    output->ch2o     = (response[15] * 256 + response[16]) + cal_offsets.ch2o_offset; // Offset aplicado no valor em ug/m3
+
+    // Cálculo da Temperatura: (RAW - 500 + OFFSET) * 0.1
+    // Usando a fórmula do datasheet (-500) com o offset de calibração (+50).
+    output->temp     = (((response[11] * 256) + response[12]) - 500 + cal_offsets.temp_offset) * 0.1;
+
+    // Cálculos que exigem conversão de unidade após o offset
+    output->co       = ((response[17] * 256 + response[18]) * 0.1)  + cal_offsets.co_offset;
+    output->o3       = ((response[19] * 256 + response[20]) * 10)   + cal_offsets.o3_offset;  // O datasheet indica 0.01ppm, que é 10ppb. O offset é em ppb.
+    output->no2      = ((response[21] * 256 + response[22]) * 10)   + cal_offsets.no2_offset; // O datasheet indica 0.01ppm, que é 10ppb. O offset é em ppb.
+
+
+    // Classifica os valores FINAIS (já calibrados) em níveis
+    output->pm1_0_lvl    = get_pm1_0_lvl(output->pm1_0);
+    output->pm2_5_lvl    = get_pm2_5_lvl(output->pm2_5);
+    output->pm10_lvl     = get_pm10_lvl(output->pm10);
+    output->co2_lvl      = get_co2_lvl(output->co2);
+    output->voc_lvl      = get_voc_lvl(output->voc);
+    output->humidity_lvl = get_humidity_lvl(output->humidity);
+    output->ch2o_lvl     = get_ch2o_lvl(output->ch2o);
+    output->co_lvl       = get_co_lvl(output->co);
+    output->o3_lvl       = get_o3_lvl(output->o3);
+    output->no2_lvl      = get_no2_lvl(output->no2);
 }
 
 /**
